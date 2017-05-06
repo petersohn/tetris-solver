@@ -7,9 +7,12 @@
 
 namespace mx = util::matrix;
 
-using Piece = std::array<mx::Matrix<bool>, 4>;
+static constexpr int numRotations = 4;
+static constexpr int numPieces = 7;
 
-extern const std::array<Piece, 7> pieces;
+using Piece = std::array<mx::Matrix<bool>, numRotations>;
+
+extern const std::array<Piece, numPieces> pieces;
 
 const Piece* getPiece(char id);
 
