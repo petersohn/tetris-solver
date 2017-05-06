@@ -19,7 +19,7 @@ void forEachRotation(const Piece& piece, const Action& action) {
         if (rotation.width() == 0) {
             return;
         }
-        action(piece);
+        action(rotation);
     }
 }
 
