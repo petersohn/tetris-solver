@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <stdexcept>
 #include <string>
 
 namespace {
@@ -86,11 +87,29 @@ const std::array<Piece, 7> pieces{{
     }}
 }};
 
-const Piece* getPiece(char id) {
+namespace {
+
+int getPiece(char id) {
     static const std::string ids = "ZSTLJIO";
     auto iterator = std::find(ids.begin(), ids.end(), std::toupper(id));
     if (iterator == ids.end()) {
-        return nullptr;
+        return -1;
     }
-    return &pieces[iterator - ids.begin()];
+    return iterator - ids.begin();
+}
+
+} // unnamed namespace
+
+std::array<int, numPieces> parsePieces(const std::string& input) {
+    std::array<int, numPieces> result{{0, 0, 0, 0, 0, 0, 0}};
+    for (char element : input) {
+        int piece = getPiece(element);
+        if (piece < 0) {
+            throw std::logic_error("Invalid piece");
+        }
+        assert(piece < numPieces);
+        ++result[piece];
+    }
+
+    return result;
 }

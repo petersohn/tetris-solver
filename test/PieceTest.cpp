@@ -53,4 +53,63 @@ BOOST_AUTO_TEST_CASE(GetFitOffset) {
                 1, 1}}) == 1);
 }
 
+BOOST_AUTO_TEST_CASE(ParsePieces_empty) {
+    auto result = parsePieces("");
+    BOOST_TEST(result[0] == 0);
+    BOOST_TEST(result[1] == 0);
+    BOOST_TEST(result[2] == 0);
+    BOOST_TEST(result[3] == 0);
+    BOOST_TEST(result[4] == 0);
+    BOOST_TEST(result[5] == 0);
+    BOOST_TEST(result[6] == 0);
+}
+
+BOOST_AUTO_TEST_CASE(ParsePieces_oneOfEach) {
+    auto result = parsePieces("ZTLOSIJ");
+    BOOST_TEST(result[0] == 1);
+    BOOST_TEST(result[1] == 1);
+    BOOST_TEST(result[2] == 1);
+    BOOST_TEST(result[3] == 1);
+    BOOST_TEST(result[4] == 1);
+    BOOST_TEST(result[5] == 1);
+    BOOST_TEST(result[6] == 1);
+}
+
+BOOST_AUTO_TEST_CASE(ParsePieces_lowercase) {
+    auto result = parsePieces("ztlosij");
+    BOOST_TEST(result[0] == 1);
+    BOOST_TEST(result[1] == 1);
+    BOOST_TEST(result[2] == 1);
+    BOOST_TEST(result[3] == 1);
+    BOOST_TEST(result[4] == 1);
+    BOOST_TEST(result[5] == 1);
+    BOOST_TEST(result[6] == 1);
+}
+
+BOOST_AUTO_TEST_CASE(ParsePieces_moreOfSome) {
+    auto result = parsePieces("ssooollll");
+    BOOST_TEST(result[0] == 0);
+    BOOST_TEST(result[1] == 2);
+    BOOST_TEST(result[2] == 0);
+    BOOST_TEST(result[3] == 4);
+    BOOST_TEST(result[4] == 0);
+    BOOST_TEST(result[5] == 0);
+    BOOST_TEST(result[6] == 3);
+}
+
+BOOST_AUTO_TEST_CASE(ParsePieces_mixedOrder) {
+    auto result = parsePieces("ssolsli");
+    BOOST_TEST(result[0] == 0);
+    BOOST_TEST(result[1] == 3);
+    BOOST_TEST(result[2] == 0);
+    BOOST_TEST(result[3] == 2);
+    BOOST_TEST(result[4] == 0);
+    BOOST_TEST(result[5] == 1);
+    BOOST_TEST(result[6] == 1);
+}
+
+BOOST_AUTO_TEST_CASE(ParsePieces_invalidCharacter) {
+    BOOST_CHECK_THROW(parsePieces("x"), std::logic_error);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

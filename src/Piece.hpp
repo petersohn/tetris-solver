@@ -4,6 +4,7 @@
 #include <util/matrix/Matrix.hpp>
 
 #include <array>
+#include <string>
 
 namespace mx = util::matrix;
 
@@ -14,7 +15,7 @@ using Piece = std::array<mx::Matrix<bool>, numRotations>;
 
 extern const std::array<Piece, numPieces> pieces;
 
-const Piece* getPiece(char id);
+std::array<int, numPieces> parsePieces(const std::string& input);
 
 template<typename Action>
 void forEachRotation(const Piece& piece, const Action& action) {

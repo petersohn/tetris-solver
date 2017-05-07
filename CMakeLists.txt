@@ -16,6 +16,6 @@ find_package(Boost COMPONENTS serialization filesystem program_options system un
 include_directories(${Boost_INCLUDE_DIRS})
 
 add_subdirectory (cpp-util)
-add_subdirectory (bin)
 add_subdirectory (src)
 add_subdirectory (test)
+add_subdirectory (bin)
