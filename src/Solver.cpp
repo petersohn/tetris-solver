@@ -1,6 +1,7 @@
 #include "FloodFill.hpp"
 #include "Solver.hpp"
 
+#include <util/matrix/DumperFunctions.hpp>
 #include <util/matrix/PointRange.hpp>
 
 #include <memory>
@@ -55,6 +56,7 @@ void Solver::runThread() {
 }
 
 void Solver::processNode(Node node) {
+    // mx::dumpMatrix(std::cerr, node.field, "Processing node");
     for (mx::Point p : matrixRange(node.field)) {
         if (node.field[p] == -1) {
             for (std::size_t i = 0; i < pieces.size(); ++i) {
@@ -75,15 +77,20 @@ void Solver::processNode(Node node) {
 void Solver::fitPiece(Node node, mx::Point offset,
         const mx::Matrix<bool>& piece, std::size_t pieceId) {
     // floodFill(node.field, mx::Point{0, 0}, [](mx::Point){});
+    // mx::dumpMatrix(std::cerr, piece, "Fitting piece");
+    // std::cerr << "Offset: " << offset;
     offset.x -= getFitOffset(piece);
+    // std::cerr << " real offset: " << offset << "\n";
     for (mx::Point p : mx::matrixRange(piece)) {
-        if (mx::matrixAt(node.field, p + offset, 0) >= 0) {
+        if (piece[p] && mx::matrixAt(node.field, p + offset, 0) >= 0) {
             return;
         }
     }
 
     for (mx::Point p : mx::matrixRange(piece)) {
-        node.field[p + offset] = node.depth;
+        if (piece[p]) {
+            node.field[p + offset] = node.depth;
+        }
     }
     ++node.depth;
     --node.pieces[pieceId];
