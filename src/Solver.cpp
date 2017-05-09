@@ -5,57 +5,23 @@
 #include <util/matrix/PointRange.hpp>
 
 #include <memory>
-#include <thread>
 
 void Solver::solve(std::size_t width, std::size_t height,
         const std::array<int, numPieces>& pieces) {
     addToQueue({{width, height, -1}, pieces, 0});
+    while (!queue.empty()) {
+        auto node = queue.top();
+        queue.pop();
+        processNode(std::move(node));
+    }
 }
 
 void Solver::addToQueue(Node node) {
-    std::unique_lock<std::mutex> lock{mutex};
     queue.push(std::move(node));
     ++expandedNodes;
-    jobNotifier.notify_one();
 }
 
-void Solver::run(std::size_t numThreads) {
-    assert(runningJobs == 0);
-    runningJobs = numThreads;
-
-    std::vector<std::unique_ptr<std::thread>> threads;
-    for (std::size_t i = 0; i < numThreads; ++i) {
-        threads.push_back(std::make_unique<std::thread>(
-                [this]() { runThread(); }));
-    }
-    for (const auto& thread : threads) {
-        thread->join();
-    }
-    assert(runningJobs == 0);
-}
-
-void Solver::runThread() {
-    Node currentNode;
-    while (true) {
-        {
-            std::unique_lock<std::mutex> lock{mutex};
-            while (queue.empty()) {
-                assert(runningJobs > 0);
-                --runningJobs;
-                if (runningJobs == 0) {
-                    return;
-                }
-                jobNotifier.wait(lock);
-                ++runningJobs;
-            }
-            currentNode = queue.top();
-            queue.pop();
-        }
-        processNode(std::move(currentNode));
-    }
-}
-
-void Solver::processNode(Node node) {
+void Solver::processNode(Node&& node) {
     // mx::dumpMatrix(std::cerr, node.field, "Processing node");
     for (mx::Point p : matrixRange(node.field)) {
         if (node.field[p] == -1) {

@@ -17,7 +17,6 @@ int main(int argc, const char* argv[]) {
             }};
     solver.solve(options.width, options.height,
             parsePieces(options.pieces));
-    solver.run(options.jobs);
     std::cerr << "Total expanded nodes: " << solver.getExpandedNodes() << "\n"
             << "Number of solutions: " << numSolutions << "\n";
 }

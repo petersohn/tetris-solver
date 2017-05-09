@@ -17,7 +17,6 @@ Options parseOptions(int argc, const char* argv[]) {
         ("width,w", po::value(&options.width)->required())
         ("height,h", po::value(&options.height)->required())
         ("pieces,p", po::value(&options.pieces)->required())
-        ("jobs,j", util::defaultValue(options.jobs))
         ;
 
     po::variables_map vm;
