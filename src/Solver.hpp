@@ -28,10 +28,25 @@ private:
         int depth;
     };
 
+    enum class FitChoices {
+        noChoices, singleChoice, multipleChoices
+    };
+
+    struct FitData {
+        FitChoices choices;
+        const mx::Matrix<bool>* piece;
+        mx::Point offset;
+        std::size_t pieceId;
+    };
+
     void addToQueue(Node node);
     void processNode(Node&& node);
-    void fitPiece(Node node, mx::Point offset, const mx::Matrix<bool>& piece,
+    bool checkNode(Node& node);
+    void tryFitPiece(const Node& node, mx::Point offset,
+            const mx::Matrix<bool>& piece, mx::Matrix<FitData>& fitData,
             std::size_t pieceId);
+    bool fitPiece(Node& node, mx::Point offset,
+            const mx::Matrix<bool>& piece, std::size_t pieceId);
 
     std::function<void(const mx::Matrix<int>)> callback;
     std::stack<Node> queue;

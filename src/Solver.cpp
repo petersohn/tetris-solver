@@ -17,12 +17,23 @@ void Solver::solve(std::size_t width, std::size_t height,
 }
 
 void Solver::addToQueue(Node node) {
+    // mx::dumpMatrix(std::cerr, node.field, "Add to queue");
     queue.push(std::move(node));
     ++expandedNodes;
 }
 
 void Solver::processNode(Node&& node) {
     // mx::dumpMatrix(std::cerr, node.field, "Processing node");
+    // std::cerr << "Pieces: ";
+    // for (int piece : node.pieces) {
+    //     std::cerr << piece << " ";
+    // }
+    // std::cerr << "\n";
+    if (checkNode(node)) {
+        return;
+    }
+
+    // std::cerr << "Making search\n";
     for (mx::Point p : matrixRange(node.field)) {
         if (node.field[p] == -1) {
             for (std::size_t i = 0; i < pieces.size(); ++i) {
@@ -31,7 +42,10 @@ void Solver::processNode(Node&& node) {
                 }
                 forEachRotation(pieces[i],
                         [this, &node, &p, i](const mx::Matrix<bool>& piece) {
-                            fitPiece(node, p, piece, i);
+                            Node newNode = node;
+                            if (fitPiece(newNode, p, piece, i)) {
+                                addToQueue(std::move(newNode));
+                            }
                         });
             }
             return;
@@ -40,16 +54,91 @@ void Solver::processNode(Node&& node) {
     callback(node.field);
 }
 
-void Solver::fitPiece(Node node, mx::Point offset,
+bool Solver::checkNode(Node& node) {
+    mx::Matrix<FitData> fitData{node.field.width(), node.field.height(),
+        {FitChoices::noChoices, nullptr, {0, 0}, 0}};
+    for (mx::Point p : matrixRange(node.field)) {
+        if (node.field[p] == -1) {
+            for (std::size_t i = 0; i < pieces.size(); ++i) {
+                if (node.pieces[i] == 0) {
+                    continue;
+                }
+                forEachRotation(pieces[i],
+                        [this, &node, &p, i, &fitData](
+                                const mx::Matrix<bool>& piece) {
+                            tryFitPiece(node, p, piece, fitData, i);
+                        });
+            }
+        }
+    }
+
+    bool result = false;
+    for (mx::Point p : matrixRange(node.field)) {
+        if (node.field[p] != -1) {
+            continue;
+        }
+
+        FitData& data = fitData[p];
+        if (data.choices == FitChoices::noChoices) {
+            // std::cerr << "No choices at " << p << "\n";
+            return true;
+        }
+        if (data.choices == FitChoices::singleChoice) {
+            assert(data.piece);
+            // std::cerr << "Single choice at " << p << " with offset "
+            //         << data.offset << "\n";
+            result = true;
+            fitPiece(node, data.offset, *data.piece, data.pieceId);
+        }
+    }
+    if (result) {
+        for (int piece : node.pieces) {
+            if (piece > 0) {
+                addToQueue(std::move(node));
+                return true;
+            }
+        }
+        callback(node.field);
+        return true;
+    }
+    return false;
+}
+
+void Solver::tryFitPiece(const Node& node, mx::Point offset,
+        const mx::Matrix<bool>& piece, mx::Matrix<FitData>& fitData,
+        std::size_t pieceId) {
+    auto originOffset = offset;
+    originOffset.x -= getFitOffset(piece);
+    for (mx::Point p : mx::matrixRange(piece)) {
+        if (piece[p] && mx::matrixAt(node.field, p + originOffset, 0) >= 0) {
+            return;
+        }
+    }
+
+    for (mx::Point p : mx::matrixRange(piece)) {
+        if (piece[p]) {
+            FitData& data = fitData[p + originOffset];
+            if (data.choices == FitChoices::noChoices) {
+                data.choices = FitChoices::singleChoice;
+                data.piece = &piece;
+                data.offset = offset;
+                data.pieceId = pieceId;
+            } else if (data.choices == FitChoices::singleChoice) {
+                data.choices = FitChoices::multipleChoices;
+            }
+        }
+    }
+}
+
+bool Solver::fitPiece(Node& node, mx::Point offset,
         const mx::Matrix<bool>& piece, std::size_t pieceId) {
     // floodFill(node.field, mx::Point{0, 0}, [](mx::Point){});
     // mx::dumpMatrix(std::cerr, piece, "Fitting piece");
     // std::cerr << "Offset: " << offset;
     offset.x -= getFitOffset(piece);
-    // std::cerr << " real offset: " << offset << "\n";
     for (mx::Point p : mx::matrixRange(piece)) {
         if (piece[p] && mx::matrixAt(node.field, p + offset, 0) >= 0) {
-            return;
+            return false;
         }
     }
 
@@ -60,5 +149,5 @@ void Solver::fitPiece(Node node, mx::Point offset,
     }
     ++node.depth;
     --node.pieces[pieceId];
-    addToQueue(std::move(node));
+    return true;
 }
