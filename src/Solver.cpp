@@ -84,11 +84,15 @@ bool Solver::checkNode(Node& node) {
             return true;
         }
         if (data.choices == FitChoices::singleChoice) {
-            assert(data.piece);
-            // std::cerr << "Single choice at " << p << " with offset "
+            // std::cerr << "Single choice at " << p << " offset="
             //         << data.offset << "\n";
+            assert(data.piece);
+            // mx::dumpMatrix(std::cerr, *data.piece);
+            if (node.pieces[data.pieceId] == 0 ||
+                    !fitPiece(node, data.offset, *data.piece, data.pieceId)) {
+                return true;
+            }
             result = true;
-            fitPiece(node, data.offset, *data.piece, data.pieceId);
         }
     }
     if (result) {
@@ -134,7 +138,7 @@ bool Solver::fitPiece(Node& node, mx::Point offset,
         const mx::Matrix<bool>& piece, std::size_t pieceId) {
     // floodFill(node.field, mx::Point{0, 0}, [](mx::Point){});
     // mx::dumpMatrix(std::cerr, piece, "Fitting piece");
-    // std::cerr << "Offset: " << offset;
+    // std::cerr << "Offset: " << offset << "\n";
     offset.x -= getFitOffset(piece);
     for (mx::Point p : mx::matrixRange(piece)) {
         if (piece[p] && mx::matrixAt(node.field, p + offset, 0) >= 0) {
